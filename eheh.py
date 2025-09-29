@@ -1,4 +1,4 @@
-# remove_bg_simple_gui.py
+# remove_bg_simple_gui_fixed.py
 import os
 import tkinter as tk
 from tkinter import scrolledtext
@@ -24,11 +24,24 @@ def remove_backgrounds():
 
     for file_name in os.listdir(input_folder):
         if file_name.lower().endswith(('.png', '.jpg', '.jpeg')):
+            # Skip the output folder to avoid re-processing
+            if os.path.abspath(input_folder) == os.path.abspath(output_folder):
+                continue
+
             input_path = os.path.join(input_folder, file_name)
-            output_path = os.path.join(output_folder, file_name)
+            name, ext = os.path.splitext(file_name)
+            output_path = os.path.join(output_folder, name + ".png")  # Save all as PNG
+
             try:
                 with Image.open(input_path) as img:
                     result = remove(img)
+
+                    # Convert RGBA to RGB with white background if original was JPEG
+                    if ext.lower() in ['.jpg', '.jpeg'] and result.mode == 'RGBA':
+                        bg = Image.new("RGB", result.size, (255, 255, 255))
+                        bg.paste(result, mask=result.split()[3])  # Alpha channel
+                        result = bg
+
                     result.save(output_path)
                 log(f"Processed: {file_name}")
                 processed_count += 1
