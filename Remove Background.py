@@ -1,4 +1,3 @@
-# remove_bg_no_ui.py
 import os
 from rembg import remove
 from PIL import Image
@@ -25,6 +24,12 @@ for file_name in os.listdir(input_folder):
         try:
             with Image.open(input_path) as img:
                 result = remove(img)
+                
+                # Crop to the bounding box of non-transparent pixels
+                bbox = result.getbbox()
+                if bbox:
+                    result = result.crop(bbox)
+                
                 result.save(output_path)
             print(f"Processed: {file_name}")
             processed_count += 1
